@@ -1,6 +1,6 @@
 @BackendToFrontendComunicationExample.Server_HostAddress = http://localhost:5041
 
-GET {{BackendToFrontendComunicationExample.Server_HostAddress}}/weatherforecast/
+GET {{BackendToFrontendComunicationExample.Server_HostAddress}}/entries/
 Accept: application/json
 
 ###

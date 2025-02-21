@@ -4,7 +4,9 @@ import * as signalR from "@microsoft/signalr";
 
 function App() {
     const [entries, setEntries] = useState();
-
+    const [connected, setConnected] = useState(false);
+    const [connectionSaved, setConnectionSaved] = useState(null);
+    const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
         const connection = new signalR.HubConnectionBuilder()
@@ -13,27 +15,48 @@ function App() {
                 withCredentials: true // Allow credentials
             })
             .configureLogging(signalR.LogLevel.Debug)
+            //.withAutomaticReconnect()
             .withAutomaticReconnect()
             .build();
 
-        connection.start().then(() => console.log("SignalR Connected")).catch(err => console.error("SignalR Connection Error: ", err));
+        //newConnection.onclose((error) => {
+        //    //console.assert(newConnection.state === signalR.HubConnectionState.Disconnected);
+        //    //  connection.start()
+        //    console.log(`Connection closed due to error: "${error}".`);
+        //    setErrorMessage(`Connection closed due to error: "${error}". Try refreshing this page to restart the connection.`);
+        //});
 
-        connection.on("ReceiveUpdate", (updatedObject) => {
-            console.log("Received update: ", updatedObject);
+        connection.start().then(() => {
+            connection.invoke("GetConnectionId").then((connectionId) => { console.log("connectionId", connectionId); });
+            console.log("SignalR Connected");
+            setConnected(true);
+        }).catch(err => console.error("SignalR Connection Error: ", err));
+
+        connection.on("ConnectionEst", (status) => {
+            console.log("ConnectionEst: ", status);
+
+            // return () => connection.stop();
+        }, []);
+
+        connection.on("ReceiveEntryEvent", (type, updatedObject) => {
+            console.log("Received entry event: ", type, updatedObject);
             setEntries(prevData => {
-                const index = prevData.findIndex(item => item.id === updatedObject.id);
+                const index = prevData?.findIndex(item => item.id === updatedObject.id);
                 if (index !== -1) {
-                    return prevData.map(item => item.id === updatedObject.id ? updatedObject : item);
+                    return prevData?.map(item => item.id === updatedObject.id ? updatedObject : item);
                 }
                 return [...prevData, updatedObject];
             });
         });
 
+        setConnectionSaved(connection);
+
         return () => connection.stop();
-    }, []);
+        }, []);
+   
 
     useEffect(() => {
-        populateWeatherData();
+        populateEntryData();
     }, []);
 
     const contents = entries === undefined
@@ -65,10 +88,11 @@ function App() {
         </div>
     );
     
-    async function populateWeatherData() {
-        const response = await fetch('weatherforecast');
+    async function populateEntryData() {
+        const response = await fetch('entries');
         if (response.ok) {
             const data = await response.json();
+            console.log('aaaaaaaaaaaaaaaaaaaaaaa');
             setEntries(data);
         }
     }

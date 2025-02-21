@@ -1,14 +1,15 @@
 ﻿using BackendToFrontendComunicationExample.Server.Models;
 using BackendToFrontendComunicationExample.Server.SignalRConfigurations;
 using Microsoft.AspNetCore.SignalR;
+using System.Text.RegularExpressions;
 
 namespace BackendToFrontendComunicationExample.Server.Services;
 
 public class EventBackgroundService : BackgroundService
 {
-    private readonly IHubContext<EntryEventHub> _hubContext;
+    private readonly IHubContext<EntryEventHub, IEntryEventClient> _hubContext;
 
-    public EventBackgroundService(IHubContext<EntryEventHub> hubContext)
+    public EventBackgroundService(IHubContext<EntryEventHub, IEntryEventClient> hubContext)
     {
         _hubContext = hubContext;
     }
@@ -28,8 +29,9 @@ public class EventBackgroundService : BackgroundService
 
                 await Task.Delay(3000, stoppingToken); // Simulate event occurrence
 
-                await _hubContext.Clients.All.SendAsync("ReceiveUpdate", entry);
+                await _hubContext.Clients.All.ReceiveEntryEvent("update", entry);
             }
         }
+
     }
 }

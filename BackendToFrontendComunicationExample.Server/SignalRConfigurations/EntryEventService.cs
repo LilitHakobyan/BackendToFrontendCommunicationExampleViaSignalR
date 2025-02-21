@@ -13,7 +13,7 @@ public class EntryEventService
         _hubContext = hubContext;
     }
 
-    public async Task HandleEvent(Entry updatedObject)
+    public async Task Handle(Entry updatedObject)
     {
         for (int i = 0; i < 5; i++)
         {
